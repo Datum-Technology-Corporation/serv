@@ -211,3 +211,28 @@ Don't feed serv any illegal instructions after midnight. Many logic expressions 
 The bus interface is kind of Wishbone, but with most signals removed. There's an important difference though. Don't send acks on the instruction or data buses unless serv explicitly asks for something by raising its cyc signal. Otherwise serv becomes very confused.
 
 Don't go changing the clock frequency on a whim when running Zephyr. Or well, it's ok I guess, but since the UART is bitbanged, this will change the baud rate as well. As of writing, the UART is running at 115200 baud rate when the CPU is 32 MHz. There are two NOPs in the driver to slow it down a bit, so if those are removed I think it could achieve baud rate 115200 on a 24MHz clock.. in case someone wants to try
+
+## Simulating with iSim
+
+[iSim](https://tn-si.com) (True North Silicon) runs this design through FuseSoC
+with its `.core` files untouched. FuseSoC selects a simulator through
+**edalize**; iSim's backend is `isimtn` (edalize's own `isim` is the Xilinx ISE
+Simulator) and lives in True North Silicon's edalize fork. Two installs, in this
+order, into the Python environment your `fusesoc` runs from:
+
+    pip install fusesoc
+    pip install --no-deps --force-reinstall git+https://github.com/Datum-Technology-Corporation/edalize.git
+
+(the second replaces the edalize FuseSoC pulled in with the fork; `--no-deps`
+keeps fusesoc's own pin satisfied). `isim`, `isim-vlog`, `isim-vcom` and
+`isim-elab` must be on `PATH`.
+
+Then, from this checkout:
+
+    fusesoc --cores-root . run --tool=isimtn --setup --build award-winning:serv:serv
+
+analyses and elaborates the core to `build/award-winning_serv_serv_1.4.0/default-isimtn/isim_work/a.out.so`.
+The `servant` SoC's `sim` target depends on `fusesoc:utils:vlog_tb_utils` from the
+FuseSoC standard library, which the current library provides under another
+name (`::vlog_tb_utils`), so that target does not resolve under stock FuseSoC
+for any simulator at this commit.
