@@ -235,7 +235,13 @@ Then, from this checkout:
     fusesoc --cores-root . run --tool=isimtn --setup --build award-winning:serv:serv
 
 analyses and elaborates the core to `build/award-winning_serv_serv_1.4.0/default-isimtn/isim_work/a.out.so`.
-The `servant` SoC's `sim` target depends on `fusesoc:utils:vlog_tb_utils` from the
-FuseSoC standard library, which the current library provides under another
-name (`::vlog_tb_utils`), so that target does not resolve under stock FuseSoC
-for any simulator at this commit.
+
+The `servant` SoC's own `sim` target (upstream's `bench/servant_tb.v`) depends on
+`fusesoc:utils:vlog_tb_utils`, which lives in its own repository; add it as a
+library once, then run the testbench with a firmware image:
+
+    fusesoc library add vlog_tb_utils https://github.com/fusesoc/vlog_tb_utils
+    fusesoc library add serv .
+    fusesoc run --tool=isimtn --target=sim award-winning:serv:servant --firmware=sw/hello_uart.hex
+
+prints `Hi, I'm Servant!` and `Test complete`, then `$finish`.
